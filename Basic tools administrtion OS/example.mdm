@@ -1,0 +1,60 @@
+1.Завершення процесу:
+
+Через PowerShell (Stop-Process)
+
+• Завершення за іменем процесу. Указується назва процесу без розширення .exe 
+(ключ -Force забезпечує примусове закриття без запиту підтвердження):powershell
+Stop-Process -Name "notepad" -Force
+Используйте код с осторожностью.
+• Завершення за ідентифікатором (PID). Використовується, якщо запущено кілька копій однієї програми і 
+потрібно закрити конкретну (PID можна дізнатися командою Get-Process):powershell
+Stop-Process -Id 4512 -Force
+Используйте код с осторожностью.
+• Завершення за частиною імені або умовою. Можна знайти процеси через конвеєр і передати їх на закриття:powershell
+Get-Process *chrome* | Stop-Process -Force
+Используйте код с осторожностью.
+
+Через CLI / CMD (taskkill)
+
+У класичному командному рядку використовується утиліта taskkill. 
+Параметр /F відповідає за примусове завершення, а /T дозволяє закрити не лише сам процес, а й усі запущені ним дочірні процеси.
+• Завершення за іменем образу (/IM). Назва файлу вказується обов'язково з розширенням .exe:cmd
+taskkill /F /IM notepad.exe
+Используйте код с осторожностью.
+• Завершення за ідентифікатором (/PID). Закриває конкретний процес за його числовим номером (який можна переглянути через tasklist):cmd
+taskkill /F /PID 4512
+Используйте код с осторожностью.
+• Завершення дерева процесів (/T). Корисно для браузерів або складних програм, які створюють багато фонових підпроцесів:cmd
+taskkill /F /T /IM chrome.exe
+
+2.Змінити IP-адресу комп'ютера
+
+Через PowerShell (New-NetIPAddress)
+
+У PowerShell для керування мережею використовується модуль NetTCPIP.
+• Крок 1: Дізнатися точну назву мережевого адаптера. Виведіть список активних інтерфейсів
+Get-NetAdapter
+• Крок 2: Призначити статичну IP-адресу, маску та шлюз. 
+New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 192.168.1.50 -PrefixLength 24 -DefaultGateway 192.168.1.1
+* Крок 3: Налаштувати DNS-сервери
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses ("8.8.8.8", "1.1.1.1")
+Повернення до автоматичного отримання IP (DHCP):
+Set-NetIPInterface -InterfaceAlias "Ethernet" -Dhcp Enabled
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ResetServerAddresses
+
+Через CLI / CMD (netsh)
+• Крок 1: Переглянути назви мережевих інтерфейсів. 
+netsh interface show interface
+
+• Крок 2: Встановити статичну IP-адресу, маску та шлюз. Вкажіть назву адаптера в лапках та повну маску підмережі:cmd
+netsh interface ip set address name="Ethernet" static 192.168.1.50 255.255.255.0 192.168.1.1
+
+• Крок 3: Призначити основний та резервний DNS-сервери. Виконайте дві команди по черзі:cmd
+netsh interface ip set dns name="Ethernet" static 8.8.8.8
+netsh interface ip add dns name="Ethernet" 1.1.1.1 index=2
+
+• Повернення до автоматичного отримання IP (DHCP). Переведіть інтерфейс і DNS у режим автоматичного налаштування:cmd
+netsh interface ip set address name="Ethernet" dhcp
+netsh interface ip set dns name="Ethernet" dhcp
+
+

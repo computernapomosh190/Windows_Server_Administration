@@ -1,0 +1,105 @@
+1. Створення користувача:
+Через PowerShell (New-LocalUser)
+$Password = ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force
+New-LocalUser -Name "User1" -Password $Password -FullName "Іван Петренко" -Description "Тестовий користувач"
+
+Додавання користувача до групи
+Add-LocalGroupMember -Group "Users" -Member "User1"
+
+Через CLI / CMD (net user)
+net user User1 P@ssw0rd123! /add
+
+Створення користувача з повним іменем та описом:
+net user User1 P@ssw0rd123! /add /fullname:"Іван Петренко" /comment:"Тестовий користувач"
+
+Додавання користувача до групи адміністраторів:
+net localgroup Administrators User1 /add
+
+
+2. Як змусити користувача змінити пароль при наступному вході?
+
+Це можна зробити через графічний інтерфейс, командний рядок або PowerShell:
+• Через PowerShell (для локального користувача):powershell
+Set-LocalUser -Name "User1" -PasswordNeverExpires $false
+net user User1 /logonpasswordchg:yes
+
+• Через PowerShell (для доменного користувача в Active Directory):powershell
+Set-ADUser -Identity "User1" -ChangePasswordAtLogon $true
+
+• Через CLI / CMD:cmd
+net user User1 /logonpasswordchg:yes
+
+3. перевірити розмір директорії окремого користувача
+Через PowerShell (Get-ChildItem та Measure-Object).
+(Get-ChildItem -Path "C:\Users\User1" -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
+
+Через утиліту командного рядка dir (CMD).
+dir "C:\Users\User1" /s /a
+
+
+4. Засіб для перевірки оновлень в ОС із командним інтерфейсом (Server Core)
+Модуль PowerShell PSWindowsUpdate. Дозволяє повністю керувати центром оновлень із консолі:powershell
+Install-Module PSWindowsUpdate
+Get-WindowsUpdate
+Install-WindowsUpdate -AcceptAll -AutoReboot
+
+
+6. Способи керування фаєрволом в ОС із командним інтерфейсом
+
+Налаштувати Брандмауер Windows (Windows Defender Firewall) у консольному режимі можна двома основними способами:
+• Через командлети PowerShell (модуль NetSecurity). Сучасний і рекомендований спосіб:
+	• Перевірити стан профілів: Get-NetFirewallProfile
+	• Увімкнути або вимкнути фаєрвол: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
+	• Створити нове правило (наприклад, відкрити порт 80): New-NetFirewallRule -DisplayName "Allow HTTP" -Direction Inbound -LocalPort 80 -Protocol TCP -Action Allow
+• Через класичну утиліту CLI (netsh advfirewall). Використовується у CMD та старих скриптах:
+	• Увімкнути всі профілі: netsh advfirewall set allprofiles state on
+	• Додати правило для відкриття порту: netsh advfirewall firewall add rule name="Allow HTTP" dir=in action=allow protocol=TCP localport=80
+
+
+7. Засоби для додавання ролей та компонентів до серверної ОС
+
+Встановити ролі (наприклад, AD DS, DNS, DHCP, Hyper-V) та компоненти (Features) у Windows Server можна як локально, так і віддалено:
+
+1. Через PowerShell
+
+У Windows Server та клієнтських версіях Windows (Windows 10/11) використовуються різні набори командлетів.
+Для Windows Server (модуль ServerManager):
+• Перегляд усіх доступних та встановлених ролей і компонентів:powershell
+Get-WindowsFeature
+
+• Перегляд лише встановлених компонентів (або пошук за назвою):powershell
+Get-WindowsFeature | Where-Object {$_.Installed -eq $true}
+Get-WindowsFeature -Name *DNS*
+
+• Встановлення ролі або компонента (ключ -IncludeManagementTools додатково встановлює графічні консолі керування):powershell
+Install-WindowsFeature -Name Web-Server -IncludeManagementTools
+
+• Видалення ролі або компонента (ключ -Restart автоматично перезавантажить сервер, якщо це потрібно):powershell
+Uninstall-WindowsFeature -Name Web-Server -Restart
+
+Для клієнтських ОС Windows 10 / 11 (модуль DISM):
+• Перегляд усіх компонентів та їхнього статусу:powershell
+Get-WindowsOptionalFeature -Online
+
+• Встановлення (увімкнення) компонента (наприклад, Telnet-клієнта):powershell
+Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient -All
+
+• Видалення (вимкнення) компонента:powershell
+Disable-WindowsOptionalFeature -Online -FeatureName TelnetClient
+
+
+2. Через CLI / CMD (DISM.exe)
+
+У класичному командному рядку використовується системна утиліта обслуговування образів DISM (працює однаково і в клієнтській Windows, і в Windows Server).
+• Перегляд списку всіх компонентів та їхнього поточного стану:cmd
+dism /online /get-features /format:table
+Используйте код с осторожностью.
+• Перегляд детальної інформації про конкретний компонент:cmd
+dism /online /get-featureinfo /featurename:TelnetClient
+Используйте код с осторожностью.
+• Встановлення (активація) компонента (ключ /all автоматично вмикає всі батьківські залежності):cmd
+dism /online /enable-feature /featurename:TelnetClient /all
+Используйте код с осторожностью.
+• Видалення (вимкнення) компонента:cmd
+dism /online /disable-feature /featurename:TelnetClient
+Используйте код с осторожностью.

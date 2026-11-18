@@ -1,0 +1,9 @@
+systeminfo.exe — стандартна утиліта для швидкої комплексної перевірки «Вимоги Hyper-V» (Hyper-V Requirements)
+
+Get-CimInstance -ClassName Win32_OperatingSystem — команда PowerShell, яка використовується для перевірки редакції та архітектури ОС. Hyper-V
+
+• Get-CimInstance -ClassName Win32_Processor — команда для детальної перевірки функцій процесора. Вона показує, 
+чи підтримує ЦП апаратну віртуалізацію (VirtualizationFirmwareEnabled) та розширення трансляції адрес (SecondLevelAddressTranslationExtensions).
+• Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All — команда для перевірки поточного статусу компонента Hyper-V у системі. Вона показує, чи встановлено вже гіпервізор та інструменти керування ним.
+
+

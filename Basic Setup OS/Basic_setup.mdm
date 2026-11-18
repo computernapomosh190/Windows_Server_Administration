@@ -1,0 +1,73 @@
+1. Перевірка та зміна імені комп’ютера і його опису
+
+Через PowerShell:
+• Перевірка поточного імені та опису.
+$env:COMPUTERNAME
+(Get-CimInstance -ClassName Win32_OperatingSystem).Description
+
+* Зміна імені комп'ютера. Замініть New-PC-Name на бажане ім'я (для застосування знадобиться перезавантаження):powershell
+Rename-Computer -NewName "New-PC-Name"
+
+* Зміна опису комп'ютера. Запишіть новий опис у властивості операційної системи:powershell
+Get-CimInstance -ClassName Win32_OperatingSystem | Set-CimInstance -Property @{Description="Новий опис ПК"}
+
+Через CLI (CMD):
+• Перевірка поточного імені та опису. 
+hostname
+net config server
+
+* Зміна імені комп'ютера. Використайте утиліту wmic (замініть New-PC-Name на нове ім'я):cmd
+wmic computersystem where name="%computername%" call rename name="New-PC-Name'
+
+* Зміна опису комп'ютера. Задайте коментар через конфігурацію сервера:cmd
+net config server /srvcomment:"Новий опис ПК"
+
+
+2. Перевірка статусу активації операційної системи
+
+Через PowerShell:
+• Перевірка стану ліцензії. Команда поверне числовий статус (значення 1 означає, що система активована)
+Get-CimInstance -ClassName SoftwareLicensingProduct -Filter "Name like 'Windows%'" | Where-Object { $_.PartialProductKey } | 
+Select-Object Name, LicenseStatus
+
+Через CLI (CMD) та універсальні скрипти:
+• Перевірка терміну дії активації. Виводить спливаюче вікно з інформацією про постійну активацію або дату її завершення
+slmgr /xpr
+
+Перевірка деталей ліцензії в консолі. Використовуйте cscript, щоб текст виводився прямо у вікно термінала без спливаючих вікон
+cscript //nologo C:\Windows\System32\slmgr.vbs /dli
+
+
+3. Дозвіл на віддалене підключення (RDP)
+
+Через PowerShell:
+• Увімкнення протоколу RDP. Змініть параметр у реєстрі:powershell
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+
+* Дозвіл у брандмауері Windows. Відкрийте порти для вхідних підключень віддаленого робочого столу:powershell
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+Через CLI (CMD):
+• Увімкнення RDP та правила брандмауера.
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+
+
+4. Активація режиму високої продуктивності (High Performance)
+
+Для керування живленням в обох оболонках використовується стандартна утиліта powercfg. Стандартний ідентифікатор (GUID)
+схеми «Висока продуктивність» у Windows однаковий для більшості систем — 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+
+Через PowerShell та CLI (однакові команди):
+• Перевірка списку доступних схем живлення. Поточна активна схема позначається зірочкою *:cmd
+powercfg /list
+
+• Активація режиму High Performance. Встановіть схему за її стандартним GUID:cmd
+powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+
+• Відновлення схеми, якщо вона прихована. У деяких редакціях Windows (наприклад, на ноутбуках із Modern Standby)
+схема може бути відсутня у списку, тому її потрібно спочатку дублювати зі системного шаблону:cmd
+powercfg -duplicatescheme 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+
+
+

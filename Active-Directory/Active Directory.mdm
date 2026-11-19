@@ -1,0 +1,23 @@
+1. Перегляд та створення групп Active Directory
+Перегляд  властивості груп
+$groups = "Administrators", "Users", "Hyper-V Administrators"
+$groups | ForEach-Object -Process { Get-ADGroup -Identity $PSItem -Properties * } | Select-Object -Property Name, DistinguishedName, Description | Format-List
+
+Рахунок загальної кількості
+(Get-ADGroup -Filter * -Properties * | Select-Object -Property Name, Description).Count
+
+Массове створення нових груп та підрозділів
+$g = "CloudAdm", "OnPremAdm"
+$g | ForEach-Object -Process {
+    New-ADGroup -Name $PSItem -SamAccountName $PSItem -Path "OU=IT,OU=Departments,DC=studyposh,DC=com" -GroupScope Global
+}
+
+2.Змінення опис груп та зберігання сховище паролів
+Оновлення опис груп
+Get-ADGroup -Identity "Specific Group" | Set-ADGroup -Description "Some Description"
+
+Встанновлення модулів та реєстрація модулів локального сейфа
+Install-Module -Name Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore -Repository PSGallery
+Register-SecretVault -Name LocalStore -ModuleName Microsoft.PowerShell.SecretStore -DefaultVault
+Set-Secret -Vault LocalStore -Name "domain_adm_pass" -Secret (Get-Credential) -Metadata @{Description="STUDYPOSH domain admin pass"}
+

@@ -1,3 +1,7 @@
+Налаштування DNS
+Set-DnsClientServerAddress -InterfaceIndex ((Get-NetAdapter).InterfaceIndex) -ServerAddresses ("172.16.19.101","8.8.8.8")
+
+Ввод в домен
 Enter-PSSession -VMName "W10-2" -Credential SH
 
 $parameters = @{

@@ -1,0 +1,15 @@
+1. Перегдяд властивості підрозділа (OU)
+Get-ADOrganizationalUnit -Filter {name -eq "IT"}
+
+2. Пошук користувачів
+Get-ADUser -Filter {(Enabled -eq $true) -and (PasswordNeverExpires -eq $false)}
+
+3. Отримання атрибутів користувача
+Get-ADUser -Identity SHapych -Properties *
+
+4.Пошук заблокованих та вимкнених користувачів
+# Поиск временно заблокированных учётных записей (например, из-за неверного ввода пароля)
+Search-ADAccount -LockedOut
+
+# Поиск отключённых учётных записей
+Search-ADAccount -AccountDisabled

@@ -63,3 +63,25 @@ $groups | ForEach-Object -Process { Get-ADGroup -Identity $PSItem -Properties * 
 # Вывод имени и описания всех групп домена
 Get-ADGroup -Filter * -Properties * | Select-Object -Property Name, Description | Format-List
 
+5.Редагування атрибутів через объект -Instance
+$user = Get-ADUser -Identity ATuring -Properties *
+$user.l = "London"
+$user.c = "GB"
+$user.co = "United Kingdom"
+$user.countrycode = 826
+$user.company = "Study PowerShell"
+$user.department = "IT Support"
+$user.title = "Support Engineer"
+$user.mail = "ATuring@gmail.com"
+
+Set-ADUser -Instance $user
+
+# Проверка обновлённых атрибутов
+Get-ADUser -Identity ATuring -Properties * | Select-Object -Property Name, City, Country, Company, Department, Title, EmailAddress
+
+6.Перемещіння користувача в інший подрозділ (OU)
+Get-ADUser -Identity DJones | Move-ADObject -TargetPath "OU=Teachers-Users,OU=Teachers,OU=Departments,DC=studyposh,DC=com" -PassThru
+
+Get-ADUser -Identity DJones -Properties * | Select-Object -Property Name, DistinguishedName, Enabled
+
+

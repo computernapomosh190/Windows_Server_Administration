@@ -1,0 +1,4 @@
+$cred = (Get-Credential -Credential studyposh\SH)
+$s = New-PSSession -VMName "S22-01" -Credential $cred
+Get-PSSession
+Enter-PSSession -Session $s

@@ -6,6 +6,18 @@ $groups | ForEach-Object -Process { Get-ADGroup -Identity $PSItem -Properties * 
 Рахунок загальної кількості
 (Get-ADGroup -Filter * -Properties * | Select-Object -Property Name, Description).Count
 
+Створення вкладених підрозділів (OU)
+$OUs = "Sales-Users", "Sales-Laptops"
+$OUs | ForEach-Object -Process {
+    New-ADOrganizationalUnit -Name $PSItem -Path "OU=Sales,OU=Departments,DC=studyposh,DC=com"
+}
+
+$OUs = "Teachers-Users", "Teachers-Laptops"
+$OUs | ForEach-Object -Process {
+    New-ADOrganizationalUnit -Name $PSItem -Path "OU=Teachers,OU=Departments,DC=studyposh,DC=com"
+}
+
+
 Массове створення нових груп та підрозділів
 $g = "CloudAdm", "OnPremAdm"
 $g | ForEach-Object -Process {
@@ -20,4 +32,34 @@ Get-ADGroup -Identity "Specific Group" | Set-ADGroup -Description "Some Descript
 Install-Module -Name Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore -Repository PSGallery
 Register-SecretVault -Name LocalStore -ModuleName Microsoft.PowerShell.SecretStore -DefaultVault
 Set-Secret -Vault LocalStore -Name "domain_adm_pass" -Secret (Get-Credential) -Metadata @{Description="STUDYPOSH domain admin pass"}
+
+3.Змінення параметрів та захист OU від випадкового видалення
+# Установка описания и включение защиты для подразделения IT
+Get-ADOrganizationalUnit -Filter {name -like "IT"} |
+    Set-ADOrganizationalUnit `
+        -Description "This OU is for the users with administrative rights to manage cloud and on-premise resources" `
+        -ProtectedFromAccidentalDeletion:$true
+
+# Отключение защиты от удаления для Sales и Teachers
+$OUs = "Sales", "Teachers"
+$OUs | ForEach-Object -Process {
+    Get-ADOrganizationalUnit -Filter "name -like '$($PSItem)'" -SearchBase "OU=Departments,DC=studyposh,DC=com" |
+        Set-ADOrganizationalUnit `
+            -ProtectedFromAccidentalDeletion:$false
+}
+
+# Проверка текущих настроек всех трёх подразделений
+$OUs = "Sales", "Teachers", "IT"
+$OUs | ForEach-Object -Process {
+    Get-ADOrganizationalUnit -Filter "name -like '$($PSItem)'" -SearchBase "OU=Departments,DC=studyposh,DC=com" -Properties * |
+        Select-Object -Property Name, DistinguishedName, Description, ProtectedFromAccidentalDeletion | Format-List
+}
+
+4.Перегляд властивості групп Active Directory
+$groups = "Administrators", "Users", "Hyper-V Administrators"
+$groups | ForEach-Object -Process { Get-ADGroup -Identity $PSItem -Properties * } |
+    Select-Object -Property Name, DistinguishedName, Description | Format-List
+
+# Вывод имени и описания всех групп домена
+Get-ADGroup -Filter * -Properties * | Select-Object -Property Name, Description | Format-List
 

@@ -1,0 +1,10 @@
+Enter-PSSession -VMName "W10-2" -Credential SH
+
+$parameters = @{
+    'DomainName' = 'studyposh.com';
+    'NewName'    = 'SW10-02';
+    'Credential' = 'STUDYPOSH\SH';
+    'OUPath'     = 'OU=Teachers-Laptops,OU=Teachers,OU=Departments,DC=studyposh,DC=com'
+}
+
+Add-Computer @parameters -Restart -Force

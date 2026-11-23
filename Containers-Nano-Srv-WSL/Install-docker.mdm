@@ -1,0 +1,12 @@
+1. Встановлення Docker Engine на Windows Server
+Завантажте та запустіть офіційний скрипт із репозиторію Microsoft Windows Containers:
+Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/Windows-Containers/Main/helpful_tools/Install-DockerCE/install-docker-ce.ps1"
+ -o install-docker-ce.ps1
+.\install-docker-ce.ps1
+
+Після перезавантаження перевірте коректність встановлення:powershell
+docker version
+docker info
+
+Пошук образів для реальних сценаріїв
+docker search microsoft

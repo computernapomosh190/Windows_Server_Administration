@@ -1,0 +1,43 @@
+
+Крок 1. Завантаження образу (Pull)
+
+Виконайте в консолі вашого сервера команду відповідно до версії ОС:
+• Для Windows Server 2022:powershell
+docker pull ://microsoft.com
+
+Крок 2. Запуск контейнера в інтерактивному режимі
+
+Прапорці -it (--interactive --tty) підключають ваш поточний термінал безпосередньо до сесії оболонки всередині контейнера:
+powershell
+# Для Windows Server 2022 (замініть тег на lts-nanoserver-1809 для Server 2019)
+docker run -it --name nano-pwsh ://microsoft.com pwsh
+
+Крок 3. Практика роботи всередині контейнера
+
+$PSVersionTable
+Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsHardwareAbstractionLayer
+
+2. Перегляд запущених процесів та служб (ви побачите, наскільки мінімалістичним є Nano Server):powershell
+Get-Process
+Get-Service
+
+3. Перевірка мережевих налаштувань та доступу до інтернету:
+ipconfig /all
+Invoke-WebRequest -Uri "https://www.microsoft.com" -UseBasicParsing | Select-Object StatusCode, StatusDescription
+
+Робота з файловою системою (створення папки, скрипту та його запуск):
+New-Item -Path "C:\Lab" -ItemType Directory
+Set-Content -Path "C:\Lab\test.ps1" -Value 'Write-Output "Привіт із контейнера Nano Server! Час: $(Get-Date)"'
+C:\Lab\test.ps1
+
+
+Крок 4. Вихід та керування контейнером
+
+• Щоб завершити роботу та вийти з контейнера (це також зупинить сам контейнер, оскільки pwsh був його головним процесом):powershell
+exit
+Используйте код с осторожностью.
+• Щоб знову увійти у вже створений контейнер (збережуться всі файли, які ви створили в C:\Lab):powershell
+docker start -i nano-pwsh
+Используйте код с осторожностью.
+• Щоб видалити контейнер після завершення практики:powershell
+docker rm nano-pwsh

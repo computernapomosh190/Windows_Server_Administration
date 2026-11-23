@@ -1,0 +1,21 @@
+1. Розгортання та налаштування ролей DNS і DHCP
+Через PowerShell (від імені адміністратора):powershell
+Install-WindowsFeature -Name DNS, DHCP -IncludeManagementTools
+
+* Додавання A- та CNAME-записів у DNS
+# Додавання A-запису
+Add-DnsServerResourceRecordA -Name "web01" -ZoneName "study.local" -IPv4Address "192.168.10.50"
+
+# Додавання CNAME-запису
+Add-DnsServerResourceRecordCName -Name "www" -HostNameAlias "web01.study.local" -ZoneName "study.local"
+
+* Налаштування DHCP Scope (області) та додаткової опції
+# Створення DHCP Scope
+Add-DhcpServerv4Scope -Name "Office_LAN" -StartRange 192.168.10.100 -EndRange 192.168.10.200 -SubnetMask 255.255.255.0 -State Active
+
+# Налаштування базових опцій (Шлюз - 003, DNS - 006) та додаткової опції (Доменне ім'я - 015)
+Set-DhcpServerv4OptionValue -ScopeId 192.168.10.0 -Router 192.168.10.1 -DnsServer 192.168.10.10 -DnsDomain "study.local"
+
+* Резервування IP-адреси за пристроєм
+Add-DhcpServerv4Reservation -ScopeId 192.168.10.0 -IPAddress 192.168.10.150 -ClientId "00-11-22-33-44-55" -Name "Printer_HP"
+

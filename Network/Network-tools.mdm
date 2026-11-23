@@ -1,0 +1,89 @@
+
+1. Мережева статистика та процеси за підключеннями
+
+• CLI (CMD) (запускати від імені адміністратора):cmd
+:: Список активних підключень, портів, PID та назв процесів
+netstat -anob
+
+:: Загальна статистика за протоколами (TCP, UDP, IP, ICMP)
+netstat -s
+Используйте код с осторожностью.
+• PowerShell:powershell
+# Активні TCP-підключення з іменами процесів
+Get-NetTCPConnection | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, State, OwningProcess, @{Name="Process";Expression={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} | Format-Table -AutoSize
+
+# Статистика мережевих адаптерів (отримані/відправлені байти, помилки)
+Get-NetAdapterStatistics
+Используйте код с осторожностью.
+
+2. Ім’я комп’ютера та його FQDN (повне доменне ім'я)
+
+• CLI (CMD):cmd
+:: Тільки ім'я комп'ютера
+hostname
+
+:: Ім'я та основний DNS-суфікс (разом утворюють FQDN)
+ipconfig /all | findstr /i "Host Primary"
+Используйте код с осторожностью.
+• PowerShell:powershell
+# Ім'я комп'ютера
+$env:COMPUTERNAME
+
+# Повне доменне ім'я (FQDN)
+[System.Net.Dns]::GetHostByName($env:COMPUTERNAME).HostName
+Используйте код с осторожностью.
+
+3. MAC-адреса конкретного мережевого адаптера
+
+• CLI (CMD):cmd
+:: Виведення списку всіх адаптерів з їхніми назвами та MAC-адресами
+getmac /v /fo list
+Используйте код с осторожностью.
+• PowerShell:powershell
+# Переглянути всі адаптери та їхні MAC-адреси
+Get-NetAdapter | Select-Object Name, InterfaceDescription, MacAddress
+
+# Отримати MAC-адресу конкретного адаптера (наприклад, "Ethernet" або "Wi-Fi")
+(Get-NetAdapter -Name "Ethernet").MacAddress
+Используйте код с осторожностью.
+
+4. Перевірка доступності вебсайту bing.com
+
+• CLI (CMD):cmd
+:: Перевірка через ICMP-запити (ping)
+ping bing.com
+
+:: Перевірка доступності вебсервера (HTTP-заголовок)
+curl -I https://bing.com
+Используйте код с осторожностью.
+• PowerShell:powershell
+# Базова перевірка (аналог ping)
+Test-Connection bing.com -Count 4
+
+# Перевірка доступності конкретного вебпорту (HTTPS - 443)
+Test-NetConnection bing.com -Port 443
+Используйте код с осторожностью.
+
+5. Перевірка мережевого шляху до ресурсу (трасування)
+
+• CLI (CMD):cmd
+:: Покрокове відстеження маршруту пакетів до вузла
+tracert bing.com
+
+:: Розширена діагностика шляху із втратою пакетів на кожному вузлі
+pathping bing.com
+Используйте код с осторожностью.
+• PowerShell:powershell
+# Трасування маршруту з виведенням списку проміжних вузлів
+Test-NetConnection bing.com -TraceRoute
+Используйте код с осторожностью.
+
+6. Перевірка якості сигналу (Wi-Fi)
+
+• CLI (CMD):cmd
+:: Виведення детальної інформації про бездротове з'єднання (рядок "Signal" показує якість у %)
+netsh wlan show interfaces
+Используйте код с осторожностью.
+• PowerShell:powershell
+# Фільтрація лише назви адаптера, мережі (SSID) та рівня сигналу (%)
+(netsh wlan show interfaces) -match '^\s*(Name|SSID|Signal|Receive|Transmit)'

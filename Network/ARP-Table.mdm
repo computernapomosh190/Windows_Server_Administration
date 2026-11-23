@@ -1,0 +1,51 @@
+Керування через класичний CLI (Command Prompt / CMD)
+
+Примітка: Усі команди нижче виконуються в командному рядку, запущеному від імені адміністратора.
+
+Дія	ARP-таблиця (arp)	Таблиця маршрутизації (route)
+Перегляд таблиці	arp -a	route print
+Додавання запису	arp -s 192.168.10.77 00-aa-bb-cc-dd-ee	route add 10.20.0.0 mask 255.255.0.0 192.168.10.1
+Перевірка роботи	arp -a 192.168.10.77 (має відобразитись тип static)	tracert 10.20.0.5 або route print 10.20.*
+Видалення / Очищення	arp -d 192.168.10.77 (видалення одного)
+arp -d * (повне очищення)	route delete 10.20.0.0 (видалення маршруту)
+route -f (очищення всіх шлюзів — обережно!)
+
+
+Керування через PowerShell
+
+1. Робота з ARP-таблицею (кешем сусідів):
+• Спочатку дізнайтеся індекс вашого мережевого інтерфейсу (ifIndex):powershell
+Get-NetAdapter | Select-Object Name, ifIndex
+Используйте код с осторожностью.
+• Перегляд таблиці:powershell
+Get-NetNeighbor -AddressFamily IPv4
+Используйте код с осторожностью.
+• Додавання статичного запису (підставте свій InterfaceIndex, наприклад, 12):powershell
+New-NetNeighbor -InterfaceIndex 12 -IPAddress "192.168.10.77" -LinkLayerAddress "00-aa-bb-cc-dd-ee" -State Permanent
+
+• Перевірка:powershell
+Get-NetNeighbor -IPAddress "192.168.10.77"
+Используйте код с осторожностью.
+• Видалення / очищення:powershell
+# Видалення конкретного запису
+Remove-NetNeighbor -IPAddress "192.168.10.77" -Confirm:$false
+
+# Очищення всього динамічного ARP-кешу
+Get-NetNeighbor -State Reachable, Stale | Remove-NetNeighbor -Confirm:$false
+Используйте код с осторожностью.
+2. Робота з таблицею маршрутизації:
+• Перегляд таблиці:powershell
+Get-NetRoute -AddressFamily IPv4
+Используйте код с осторожностью.
+• Додавання маршруту (підставте свій InterfaceIndex, наприклад, 12)
+New-NetRoute -DestinationPrefix "10.20.0.0/16" -InterfaceIndex 12 -NextHop "192.168.10.1"
+
+• Перевірка роботи:powershell
+# Перевірка наявності маршруту
+Get-NetRoute -DestinationPrefix "10.20.0.0/16"
+
+# Перевірка того, який саме маршрут система обере для конкретної IP-адреси
+Find-NetRoute -RemoteIPAddress "10.20.5.10"
+Используйте код с осторожностью.
+• Видалення маршруту:powershell
+Remove-NetRoute -DestinationPrefix "10.20.0.0/16" -Confirm:$false

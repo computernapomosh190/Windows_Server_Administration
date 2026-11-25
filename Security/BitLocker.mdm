@@ -1,0 +1,25 @@
+Перевіряє, чи встановлений та завантажений у поточну сесію модуль керування шифруванням дисків BitLocker (ModuleType: Script, Version: 1.0.0.0).
+1. Get-Module -Name bitlocker
+	• Перевіряє, чи встановлений та завантажений у поточну сесію модуль керування шифруванням дисків BitLocker (ModuleType: Script, Version: 1.0.0.0).
+	• У стовпці ExportedCommands починає виводити перелік доступних функцій, але обрізає його трьома крапками через ширину вікна.
+
+Get-Command -Module bitlocker
+• Виводить повний, зручний список усіх 14 командлетів (функцій), які входять до модуля bitlocker для керування шифруванням томів:
+	• Перевірка стану: Get-BitLockerVolume (показує, які диски зашифровані, відсоток шифрування та метод захисту).
+	• Увімкнення та вимкнення: Enable-BitLocker, Disable-BitLocker.
+	• Тимчасове призупинення / відновлення (наприклад, перед оновленням BIOS): Suspend-BitLocker, Resume-BitLocker.
+	• Блокування / розблокування дисків: Lock-BitLocker, Unlock-BitLocker, а також авторозблокування (Enable-BitLockerAutoUnlock, Disable-BitLockerAutoUnlock, Clear-BitLockerAutoUnlock).
+	• Керування ключами відновлення та резервним копіюванням (у тому числі в Azure AD / Entra ID): Add-BitLockerKeyProtector, Remove-BitLockerKeyProtector, Backup-BitLockerKeyProtector, BackupToAAD-BitLockerKeyProtector.
+
+Командлет перевіряє стан шифрування BitLocker для всіх підключених томів на комп'ютері SP19-HV:
+  Get-BitLockerVolume
+1. Системний диск C: (OperatingSystem):
+	• VolumeStatus: FullyDecrypted — диск повністю розшифрований.
+	• EncryptionPercentage: 0 — зашифровано 0%.
+	• KeyProtector: {} — захисники ключів (пароль, TPM або ключ відновлення) не додані.
+	• ProtectionStatus: Off — захист BitLocker вимкнено.
+2. Диск даних (Data, частково перекритий червоною смужкою плеєра):
+	• VolumeStatus: FullyEncrypted — диск повністю зашифрований.
+	• EncryptionPercentage: 100 — шифрування завершено на 100%.
+	• KeyProtector: {Password, RecoveryPassword} — для розблокування використовується пароль та 48-значний ключ відновлення.
+	• ProtectionStatus: On — захист BitLocker активний.

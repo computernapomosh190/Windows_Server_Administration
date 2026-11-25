@@ -1,0 +1,72 @@
+systeminfo - Переглянути інформацію о системи
+Основні приклади використання:
+
+• Отримати всю інформацію про систему (ОС, BIOS, процесор, пам'ять, оновлення):powershell
+Get-ComputerInfo
+
+• Вивести лише інформацію про операційну систему (фільтрація за властивістю):powershell
+Get-ComputerInfo -Property "Os*"
+
+(Аналогічно можна фільтрувати за "Bios*", "Cs*" для заліза або "Windows*").
+
+• Перевірити час останнього завантаження системи (Uptime) та версію ОС:
+Get-ComputerInfo | Select-Object WindowsProductName, OsVersion, OsLastBootUpTime
+
+Get-Process | Select-Object -First 5
+
+• Що робить: Отримує список усіх запущених процесів за допомогою Get-Process і передає їх через конвеєр (|) 
+командлету Select-Object, який обмежує вивід лише першими 5 об'єктами.
+Get-Process | Get-Member
+
+• Що робить: Передає об'єкти процесів у командлет Get-Member (скорочено gm), щоб показати, 
+з чого складається цей об'єкт у .NET (TypeName: System.Diagnostics.Process).
+
+На цьому скриншоті показано вибірку конкретних процесів із додатковими параметрами та формуванням кастомного звіту за допомогою конвеєра (|)
+Get-Process -Name taskmgr, powershell_ise, notepad -IncludeUserName | Select-Object -Property ProcessName, WS, CPU, Path, Description, UserName
+
+2. ідбір потрібних властивостей (Select-Object):
+	• -Property ProcessName, WS, CPU, Path, Description, UserName — замість стандартної таблиці виводить лише вказані 6 властивостей:
+		• ProcessName — назва процесу (Notepad).
+		• WS — Working Set, обсяг оперативної пам'яті в байтах.
+		• CPU — процесорний час у секундах.
+		• Path — повний шлях до виконуваного файлу .exe.
+		• Description — опис файлу.
+		• UserName — ім'я облікового запису власника процесу (SW\SH
+
+Get-Process -Name taskmgr, powershell_ise, notepad -IncludeUserName | Select-Object -First 5 -Property ProcessName,
+@{Name = "RAM(MB)"; Expression = {[System.Math]::Round($PSItem.WS / 1MB,2)}}, @{Name = "CPUTime(seconds)";
+Expression = {[System.Math]::Round($PSItem.CPU,2)}}, Path, Description, UserName
+
+На цьому скриншоті показано приклад створення обчислюваних властивостей (calculated properties)
+у командлеті Select-Object, щоб зробити технічні дані зручними для читання.
+
+$results = Get-Process -Name taskmgr, powershell_ise, notepad -IncludeUserName | Select-Object -First 5 -Property ProcessName, 
+@{Name = "RAM(MB)"; Expression = {[System.Math]::Round($PSItem.WS / 1MB,2)}}, @{Name = "CPUTime(seconds)"; 
+Expression = {[System.Math]::Round($PSItem.CPU,2)}}, Path, Description, UserName
+
+збереження результатів роботи конвеєра у змінну для подальшого використання.
+
+$results | Format-Table
+Оскільки у змінній $results зберігається 6 властивостей, за замовчуванням PowerShell вивів би їх списком. Командлет Format-Table примусово будує таблицю.
+$results | Format-Table -Wrap
+
+Get-Process -IncludeUserName | Where-Object -FilterScript {$PSItem.StartTime} | Select-Object -Property Name, Id,
+@{Name = "Run Time"; Expression = {(Get-Date) - $PSItem.StartTime}}, UserName | Sort-Object -Property Run -Descending | 
+Select-Object -First 10
+
+показано пошук процесів, які працюють у системі найдовше, із розрахунком точного часу їхньої роботи (Uptime).
+
+
+Імпорт із CSV та експорт у таблицю Excel
+
+powershell
+Import-Csv -Path C:\results.csv | Export-Excel
+
+
+2. Пошук та примусове завершення процесів
+
+powershell
+Get-Process -Name taskmgr, powershell_ise, notepad | Stop-Process -Force
+
+Get-Process -IncludeUserName | Where-Object -FilterScript {$PSItem.StartTime} | Select-Object -Property Name, Id, @{Name = "Run Time"; Expression = {(Get-Date) - $PSItem.StartTime}}, UserName | Sort-Object -Property Run -Descending | Select-Object -First 10
+

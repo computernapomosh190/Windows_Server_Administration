@@ -1,0 +1,16 @@
+Створює нове правило у вбудованому брандмауері Windows (Windows Defender Firewall), яке дозволяє вхідний пінг (ICMPv4-запити) до цього комп'ютера
+
+New-NetFirewallRule -DisplayName "Allow inbound ICMPv4" -Name "Allow inbound ICMPv4" -Profile Any -Direction Inbound -Action Allow -Protocol ICMPv4
+
+
+Розбір параметрів:
+
+• -DisplayName "Allow inbound ICMPv4" — зрозуміла назва правила, яка відображатиметься у графічному інтерфейсі брандмауера.
+• -Name "Allow inbound ICMPv4" — внутрішнє системне ім'я правила (для керування через PowerShell).
+• -Profile Any — застосовує правило для всіх мережевих профілів одночасно (Доменний, Приватний та Публічний).
+• -Direction Inbound — вказує напрямок трафіку: вхідні пакети (коли пінгують цей комп'ютер).
+• -Action Allow — дія: дозволити з'єднання.
+• -Protocol ICMPv4 — протокол мережевої діагностики (саме його використовує утиліта ping для IPv4).
+
+Створює аналогічне правило у брандмауері Windows (Windows Defender Firewall), яке дозволяє вхідний пінг та службові пакети для протоколу IPv6 (-Protocol ICMPv6).
+New-NetFirewallRule -DisplayName "Allow inbound ICMPv6" -Name "Allow inbound ICMPv6" -Profile Any -Direction Inbound -Action Allow -Protocol ICMPv6

@@ -1,0 +1,77 @@
+Виводить поточну конфігурацію служби WinRM (Windows Remote Management)
+winrm get winrm/config
+
+Етап 1. Налаштування цільового сервера (Server)
+# Отримуємо ім'я комп'ютера (або вкажіть IP-адресу в лапках, наприклад "192.168.1.10")
+$ServerName = $env:COMPUTERNAME
+
+# Створюємо сертифікат у сховищі локального комп'ютера
+$Cert = New-SelfSignedCertificate -DnsName $ServerName -CertStoreLocation "Cert:\LocalMachine\My" -KeyUsage KeyEncipherment,DataEncipherment -Type SSLServerAuthentication
+
+# Перевіряємо відбиток (Thumbprint) створеного сертифіката
+$Cert.Thumbprint
+
+
+1. Увімкнення базового PowerShell Remoting
+
+Запускає службу WinRM та створює базову конфігурацію прослуховувача (як показано на вашому третьому скриншоті):
+powershell
+Enable-PSRemoting -SkipNetworkProfileCheck -Force
+Используйте код с осторожностью.
+(Параметр -SkipNetworkProfileCheck дозволяє увімкнути віддалене керування, навіть якщо мережевий інтерфейс визначено як Public).
+
+2. Генерація самопідписаного SSL-сертифіката
+
+Створює сертифікат у локальному сховищі комп'ютера (LocalMachine\My) на ім'я сервера. Зверніть увагу: на першому фото в уроці автор вказав із зірочкою (*FQDN*), проте для коректної перевірки імені хоста клієнтом у -DnsName краще передавати точне повне ім'я комп'ютера (FQDN) або його мережеве ім'я:
+
+# Отримуємо повне доменне ім'я сервера (або просто $env:COMPUTERNAME, якщо без домену)
+$fqdn = [System.Net.Dns]::GetHostByName($env:COMPUTERNAME).HostName
+
+# Створюємо сертифікат і зберігаємо його в змінну $Cert (як у вашому уроці)
+$Cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My\ -DnsName $fqdn
+
+# Перевіряємо створений сертифікат та його відбиток (Thumbprint)
+Get-ChildItem -Path Cert:\LocalMachine\My
+
+3. Створення HTTPS-прослуховувача (Listener) WinRM
+New-Item -Path WSMan:\localhost\Listener\ -Transport HTTPS -Address * -CertificateThumbPrint $Cert.Thumbprint -Force
+
+4. Відкриття порту 5986 у брандмауері Windows
+New-NetFirewallRule -DisplayName "Allow WinRM HTTPS-In" -Name "Allow WinRM HTTPS-In" -Profile Any -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5986
+
+
+5. Перевірка роботи прослуховувача на сервері
+winrm enumerate winrm/config/listener
+
+Етап 2. Встановлення HTTPS-сесії з комп'ютера адміністратора (Client)
+
+
+Крок 1. Експорт публічного ключа на сервері (виконується на сервері)
+# На сервері: знаходимо сертифікат і зберігаємо у файл
+$Cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object {$_.Subject -like "*SP22-DC02*"}
+Export-Certificate -Cert $Cert -FilePath "C:\SP22-DC02.cer"
+
+
+Крок 2. Імпорт сертифіката на клієнті (виконується на ПК адміністратора)
+
+Запустіть PowerShell від імені адміністратора на клієнтському ПК та додайте скопійований файл у сховище довірених кореневих центрів сертифікації (Root):
+Import-Certificate -FilePath "C:\Temp\SP22-DC02.cer" -CertStoreLocation Cert:\LocalMachine\Root
+
+
+1. Перевірка слухача (Listener) на сервері
+   Get-ChildItem WSMan:\localhost\Listener | Where-Object { $_.Keys -like "*HTTPS*" } | Get-ChildItem
+
+2. Перевірка мережевого з'єднання
+Test-NetConnection -ComputerName "ІМ'Я_СЕРВЕРА" -Port 5986
+
+Встановлення зєднання
+
+# Запит облікових даних адміністратора віддаленого сервера
+$Cred = Get-Credential
+
+# Відкриття інтерактивної сесії
+Enter-PSSession -ComputerName "ІМ'Я_СЕРВЕРА" -UseSSL -Credential $Cred
+
+Invoke-Command -ComputerName "ІМ'Я_СЕРВЕРА" -UseSSL -Credential $Cred -ScriptBlock { Get-Service WinRM }
+
+

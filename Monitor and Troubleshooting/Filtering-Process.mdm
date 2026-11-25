@@ -1,0 +1,38 @@
+
+1. Дослідження процесів та об'єктів
+
+powershell
+# Вивести перші 5 процесів
+Get-Process | Select-Object -First 5
+
+# Переглянути всі властивості та методи об'єкта процесу
+Get-Process | Get-Member
+Используйте код с осторожностью.
+
+2. Фільтрація процесів та обчислювані властивості
+
+powershell
+# Вибірка конкретних процесів із додаванням імені користувача
+Get-Process -Name taskmgr, powershell_ise, notepad -IncludeUserName | Select-Object -Property ProcessName, WS, CPU, Path, Description, UserName
+
+# Переведення пам'яті в МБ та округлення часу CPU
+Get-Process -Name taskmgr, powershell_ise, notepad -IncludeUserName | Select-Object -First 5 -Property ProcessName, @{Name = "RAM(MB)"; Expression = {[System.Math]::Round($PSItem.WS / 1MB,2)}}, @{Name = "CPUTime(seconds)"; Expression = {[System.Math]::Round($PSItem.CPU,2)}}, Path, Description, UserName
+
+# Збереження результату у змінну та вивід у таблицю з перенесенням рядків
+$results = Get-Process -Name taskmgr, powershell_ise, notepad -IncludeUserName | Select-Object -First 5 -Property ProcessName, @{Name = "RAM(MB)"; Expression = {[System.Math]::Round($PSItem.WS / 1MB,2)}}, @{Name = "CPUTime(seconds)"; Expression = {[System.Math]::Round($PSItem.CPU,2)}}, Path, Description, UserName
+$results | Format-Table
+$results | Format-Table -Wrap
+Используйте код с осторожностью.
+
+3. Імпорт/Експорт та завершення процесів
+
+powershell
+# Конвертація CSV у файл Excel (потрібен модуль ImportExcel)
+Import-Csv -Path C:\results.csv | Export-Excel
+
+# Примусове завершення вибраних процесів
+Get-Process -Name taskmgr, powershell_ise, notepad | Stop-Process -Force
+Используйте код с осторожностью.
+
+4. Пошук топ-10 процесів за часом роботи (Uptime)
+Get-Process -IncludeUserName | Where-Object -FilterScript {$PSItem.StartTime} | Select-Object -Property Name, Id, @{Name = "Run Time"; Expression = {(Get-Date) - $PSItem.StartTime}}, UserName | Sort-Object -Property Run -Descending | Select-Object -First 10

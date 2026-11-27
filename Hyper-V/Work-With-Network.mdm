@@ -1,0 +1,17 @@
+1. Робота з мережевими адаптерами та IP-адресами ВМ
+Отримання IP-адреси конкретної віртуальної машини (S19-2):
+Get-VMNetworkAdapter -VMName S19-2 | Select-Object -ExpandProperty IPAddresses
+
+Виведення таблиці з іменами, комутаторами та IPv4-адресами всіх запущених ВМ:
+Get-VM | Where-Object -FilterScript { $PSItem.State -eq 'Running' } |
+    Get-VMNetworkAdapter |
+    Select-Object -Property VMName, SwitchName, @{
+        Name = 'IP'
+        Expression = { $PSItem.IPAddresses | Where-Object { $PSItem -match '172\..*' } }
+    } | Sort-Object VMName
+
+Додавання нового мережевого адаптера з підключенням до комутатора NATSwitch для всіх ВМ:
+
+(Get-VM).Name | ForEach-Object -Process {
+    Add-VMNetworkAdapter -VMName $PSItem -SwitchName 'NATSwitch'
+}

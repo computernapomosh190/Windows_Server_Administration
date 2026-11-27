@@ -1,0 +1,18 @@
+Отримання інформації про фізичні диски на хості з округленням розміру до гігабайтів:
+
+Get-PhysicalDisk | Select-Object -Property FriendlyName, SerialNumber, DeviceId, @{
+    Name = 'Size(GB)'
+    Expression = { [System.Math]::Round($PSItem.Size / 1GB, 2) }
+} | Sort-Object -Property DeviceId
+
+Виконання цієї ж команди всередині всіх запущених ВМ через -VMName (PowerShell Direct):
+(Облікові дані беруться зі сховища секретів SecretManagement за допомогою Get-Secret).
+
+Get-VM | Where-Object -FilterScript { $PSItem.State -eq 'Running' } | ForEach-Object -Process {
+    Invoke-Command -ScriptBlock {
+        Get-PhysicalDisk | Select-Object -Property FriendlyName, SerialNumber, DeviceId, @{
+            Name = 'Size(GB)'
+            Expression = { [System.Math]::Round($PSItem.Size / 1GB, 2) }
+        } | Sort-Object -Property DeviceId
+    } -VMName $PSItem.Name -Credential (Get-Secret -Name AT -Vault LocalStore)
+} | Select-Object -Property PSComputerName, 'Size(GB)'

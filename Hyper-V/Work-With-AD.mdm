@@ -1,0 +1,9 @@
+
+Робота з Active Directory та віддаленими сесіями (Remoting)
+
+• Отримання списку всіх комп'ютерів із домену Active Directory:powershell
+Get-ADComputer -Filter * | Select-Object -Property DNSHostName
+Используйте код с осторожностью.
+• Виконання команди (Get-NetAdapter) одночасно в усіх відкритих віддалених сесіях ($s):
+
+Invoke-Command -ScriptBlock { Get-NetAdapter } -Session $s | Select-Object -Property PSComputerName, ifAlias

@@ -1,0 +1,18 @@
+Створення сесії PowerShell Direct та копіювання файлів у ВМ
+
+• Створення постійної сесії з віртуальною машиною S22-1 та перевірка активних сесій:
+
+$s = New-PSSession -VMName S22-1 -Credential (Get-Secret -Name AT -Vault LocalStore)
+Get-PSSession
+
+Перегляд файлів у локальній папці завантажень на хості:
+
+Get-ChildItem -Path C:\Users\SH\Downloads\
+
+Копіювання файлу (wsl_update_x64.msi) з хоста на віртуальну машину через створену сесію $s:
+Copy-Item -Path C:\Users\SH\Downloads\wsl_update_x64.msi -Destination C:\Users\ATuring\Downloads\wsl_update_x64.msi -ToSession $s
+
+Перевірка наявності скопійованого файлу всередині ВМ (у другому вікні консолі):powershell
+Set-Location .\Downloads\
+Get-ChildItem
+

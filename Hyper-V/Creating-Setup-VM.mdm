@@ -1,0 +1,44 @@
+
+1. Створення та налаштування віртуальних дисків і ВМ
+
+• Створення нового динамічного віртуального диска розміром 10 ГБ:powershell
+New-VHD -Path .\TestVM2.vhdx -SizeBytes 10GB -Dynamic
+
+• Створення нової віртуальної машини 2-го покоління (Generation 2) з підключенням створеного диска та комутатора:
+New-VM -Name TestVM2 -Path . -Generation 2 -MemoryStartupBytes 4GB -SwitchName "Microsoft Hyper-V Network Adapter 
+#2 - Virtual Switch" -VHDPath .\TestVM2.vhdx
+
+Зміна налаштувань ВМ (виділення 8 ГБ оперативної пам'яті, вимкнення контрольних точок, увімкнення автозапуску з затримкою 180 секунд):
+Set-VM -Name TestVM2 -StaticMemory -MemoryStartupBytes 8GB -ProcessorCount 4 -CheckpointType Disabled -AutomaticStartAction Start 
+-AutomaticStartDelay 180
+
+
+Отримання інформації про віртуальні машини та їхні диски
+
+• Перегляд списку всіх ВМ на хості:powershell
+Get-VM
+Используйте код с осторожностью.
+• Отримання унікального ідентифікатора (VMId) конкретної ВМ (S22-1):powershell
+Get-VM -Name S22-1 | Select-Object -Property Name, VMId
+Используйте код с осторожностью.
+• Перегляд інформації про віртуальний жорсткий диск за VMId з переведенням розміру в ГБ:powershell
+Get-VHD -VMId b7cc7a7d-49d5-4271-8433-7580bab8dcad |
+    Select-Object -Property Path, VhdType, VhdFormat, @{
+        Name = 'Size (GB)'
+        Expression = { $PSItem.Size / 1GB -as [int] }
+    }
+Используйте код с осторожностью.
+• Фільтрація лише запущених ВМ, сортування за часом безперервної роботи (Uptime) та виведення виділеної пам'яті:powershell
+Get-VM | Where-Object -FilterScript { $PSItem.State -eq 'Running' } |
+    Sort-Object -Property Uptime |
+    Select-Object -Property Name, Uptime, @{
+        Name = 'MemoryMB'
+        Expression = { $PSItem.MemoryAssigned / 1MB }
+    }, Status
+
+    Виведення зведеної таблиці конфігурації всіх ВМ (ім'я, нотатки, кількість ядер, ОЗП у ГБ, покоління, динамічна пам'ять):powershell
+Get-VM | Select-Object -Property Name, Notes, ProcessorCount, @{
+    Name = 'RAM (GB)'
+    Expression = { $PSItem.MemoryStartup / 1GB -as [int] }
+}, Generation, DynamicMemoryEnabled | Format-Table -AutoSize
+
